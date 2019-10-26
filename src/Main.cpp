@@ -20,8 +20,10 @@
  *    added frequencySweep call
  * 
  * To Do: 
- *    Verify frequency sweep works
- *    Do something with the data
+ *    Frequency Sweep goes back and forth between working and failing.
+ *       PLUS, weird bug where it only prints the first two characters starts happening
+ *       again as soon as it's past the function call.
+ *    Verify data being returned is good & complete. start printing to a file instead of monitor?
  *    Use setOutputRange to...set output range
  *       
  */
@@ -38,12 +40,12 @@ int main(){
    unsigned long  startFrequency     = 1000; // start frequency
    unsigned long  incrementFrequency = 100;  // frequency increment
    unsigned int   numberIncrements   = 10;   // number of increments (points in the sweep)
-   int   numberMeasurements = 25;   // number of discrete measurements to be taken
+   int   numberMeasurements = 5;   // number of discrete measurements to be taken
    
    // Startup Initialization Procedures
    sei(); //enable global interrupts... 
    Serial.begin(9600);
-   Serial.println("Got to here 1");
+   Serial.println("\nGot to here 1");
    AD5933 pmodIA;
    Wire.begin(); // join i2c bus (address optional for master)
 
@@ -69,14 +71,19 @@ int main(){
       Serial.println("Setting start frequency failed.");
       return 0;
    }
+   else Serial.println("Setting start frequency successful.");
+
    if(pmodIA.setIncrementFrequency(incrementFrequency) == false) {
       Serial.println("Setting frequency increment failed.");
       return 0;
    }
+   else Serial.println("Setting frequency increment successful.");
+
    if(pmodIA.setNumberIncrements(numberIncrements) == false) {
       Serial.println("Setting number of increments failed.");
       return 0;
    }
+   else Serial.println("Setting number of increments successful.");
 
    //Step 2: numberMeasurements written above
 
@@ -84,11 +91,16 @@ int main(){
    int realArray [numberMeasurements] = { };
    int imagArray [numberMeasurements] = { };
 
+   Serial.println(realArray[4]);
+
    //Step 4:
    if(!(pmodIA.frequencySweep(realArray, imagArray, numberMeasurements))) {
-      Serial.println("Frequency sweep failed.");
+      Serial.println("FLrequency sweep failed.");
       return 0;
    }
+   else Serial.println("SUccessful frequency sweep");
+   Serial.println("She sells seashells");
+   Serial.println(realArray[4]);
 
 
    // Serial.println("Got to here 2");
