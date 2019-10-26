@@ -9,6 +9,7 @@
  *    getByte returns an int, but inside the code actually returns true and false.
  *       Should we change it to a bool?
  *    Do we need to set clock source or set internal clock?
+ *       A: default clock option on power-up is internal clock
  * 
  * Most Recent Changes:
  *    added numberMeasurements
@@ -21,6 +22,7 @@
  * To Do: 
  *    Verify frequency sweep works
  *    Do something with the data
+ *    Use setOutputRange to...set output range
  *       
  */
 
