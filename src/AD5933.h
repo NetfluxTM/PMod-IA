@@ -63,7 +63,7 @@
 // I2C result success/fail
 #define I2C_RESULT_SUCCESS       (0)
 #define I2C_RESULT_DATA_TOO_LONG (1)
-#define I2C_RESULT_ADDR_NAK      (2)
+#define I2C_RESULT_ADDR_NAK      (2)    //NAK: Negative Acknowledgement
 #define I2C_RESULT_DATA_NAK      (3)
 #define I2C_RESULT_OTHER_FAIL    (4)
 // Control register options

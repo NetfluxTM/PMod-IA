@@ -160,7 +160,7 @@ double AD5933::getTemperature() {
 
 
 /**
- * Set the color source. Choices are between internal and external.
+ * Set the clock source. Choices are between internal and external.
  *
  * @param source Internal or External clock
  * @return Success or failure
@@ -178,7 +178,7 @@ bool AD5933::setClockSource(byte source) {
 }
 
 /**
- * Set the color source to internal or not.
+ * Set the clock source to internal or not.
  *
  * @param internal Whether or not to set the clock source as internal.
  * @return Success or failure
