@@ -69,19 +69,16 @@ int main(){
    //Step 1
    if(pmodIA.setStartFrequency(startFrequency) == false) {
       Serial.println("Setting start frequency failed.");
-      return 0;
    }
    else Serial.println("Setting start frequency successful.");
 
    if(pmodIA.setIncrementFrequency(incrementFrequency) == false) {
       Serial.println("Setting frequency increment failed.");
-      return 0;
    }
    else Serial.println("Setting frequency increment successful.");
 
    if(pmodIA.setNumberIncrements(numberIncrements) == false) {
       Serial.println("Setting number of increments failed.");
-      return 0;
    }
    else Serial.println("Setting number of increments successful.");
 
@@ -96,13 +93,13 @@ int main(){
    //Step 4:
    if(!(pmodIA.frequencySweep(realArray, imagArray, numberMeasurements))) {
       Serial.println("FLrequency sweep failed.");
-      return 0;
+      //return 0;
    }
    else Serial.println("SUccessful frequency sweep");
    Serial.println("She sells seashells");
    Serial.println(realArray[4]);
 
-
+while(1);
    // Serial.println("Got to here 2");
    // //set start frequency
    // pmodIA.setStartFrequency(startFrequency);
