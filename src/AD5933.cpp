@@ -367,7 +367,6 @@ int AD5933::readControlRegister() {
 bool AD5933::getComplexData(int *real, int *imag) {
     // Wait for a measurement to be available
     while ((readStatusRegister() & STATUS_DATA_VALID) != STATUS_DATA_VALID);
-
     // Read the four data registers.
     // TODO: Do this faster with a block read
     byte realComp[2];
@@ -425,7 +424,7 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
          setControlMode(CTRL_INIT_START_FREQ) && // init start freq
          setControlMode(CTRL_START_FREQ_SWEEP))) // begin frequency sweep
          {
-             Serial.println("Settings Modes");
+             Serial.println("Settings Modes Failed");
              return false;
          }
 
@@ -433,31 +432,21 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
     int i = 0;
     while ((readStatusRegister() & STATUS_SWEEP_DONE) != STATUS_SWEEP_DONE) {
         // Make sure we aren't exceeding the bounds of our buffer
-           byte val;
-           getByte(0x94, &val);
-           Serial.print("Reg 0x94 real 1: ");
-           Serial.println(val);
-           getByte(0x95, &val);
-           Serial.print("Reg 0x95 real 2: ");
-           Serial.println(val);
-
-            getByte(0x8F, &val);
-            Serial.print("Register Value After Reset:");
-            Serial.println(val);
-        if (i >= n) {
-            Serial.println(readStatusRegister());
-            Serial.println(i);
-            Serial.println(n);
-            Serial.println("Performing Sweep");
+        if (i >= n) { //10/30/2019 Changed "i >= n" to "i > n". This fixed a bug with the STATUS_SWEEP_DONE flag never setting.
+            Serial.println("i is bigger than or equal to n");
             return false;
         }
 
         // Get the data for this frequency point and store it in the array
         if (!getComplexData(&real[i], &imag[i])) {
-            Serial.println("getComplexData1");
+            Serial.println("getComplexData Failed");
             return false;
         }
-        Serial.println(i);
+        Serial.print(real[i]);
+        Serial.print("  ");
+        Serial.print(imag[i]);
+        Serial.print("   ");
+        Serial.println(1 / ((1.94123* pow(10,-7)) * sqrt(pow(real[i],2) + pow(imag[i],2))));
         // Increment the frequency and our index.
         i++;
         setControlMode(CTRL_INCREMENT_FREQ);

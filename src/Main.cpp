@@ -37,28 +37,20 @@ const int address = 0x0D; // can also use "AD5933_ADDR" defined in AD5933.h
 
 
 int main(){
-   byte val = 0; // for testing reg values
-
-
-
+   unsigned long  startFrequency     = 15000; // start frequency
+   unsigned long  incrementFrequency = 1;  // frequency increment
+   unsigned int   numberIncrements   = 100;   // number of increments (points in the sweep)
+   int   numberMeasurements = numberIncrements+1;   // number of discrete measurements to be taken
    
-   unsigned long  startFrequency     = 1000; // start frequency
-   unsigned long  incrementFrequency = 100;  // frequency increment
-   unsigned int   numberIncrements   = 10;   // number of increments (points in the sweep)
-   int   numberMeasurements = 10;   // number of discrete measurements to be taken
-   
+   int realArray [numberMeasurements] = { };
+   int imagArray [numberMeasurements] = { };
+
+
    // Startup Initialization Procedures
    sei(); //enable global interrupts... 
    Serial.begin(9600);
-   Serial.println("\nGot to here 1");
-   
-
    AD5933 pmodIA;
    Wire.begin(); // join i2c bus (address optional for master)
-
-   pmodIA.getByte(0x8F, &val);
-   Serial.print("Register Value At Very Start:");
-   Serial.println(val);
 
 /* Frequency Sweep Sequence:
  * 1) Program Frequency Sweep Parameters into relevant registers
@@ -66,11 +58,7 @@ int main(){
  *    b) # of increments
  *    c) frequency increment
  * 
- * 2) Create an int for the number of discrete measurements we want (length of the array)
- * 
- * 3) Create two int arrays to hold the real and imaginary data
- * 
- * 4) AD5933::frequencySweep
+ * 2) AD5933::frequencySweep
  *    a) This function will:
  *          Enter standby mode
  *          Enter initialize mode
@@ -81,73 +69,39 @@ int main(){
    if(pmodIA.setStartFrequency(startFrequency) == false) {
       Serial.println("Setting start frequency failed.");
    }
-   else Serial.println("Setting start frequency successful.");
-
-   pmodIA.getByte(0x8F, &val);
-   Serial.print("Register Value After startFreq:");
-   Serial.println(val);
-
-
 
    if(pmodIA.setIncrementFrequency(incrementFrequency) == false) {
       Serial.println("Setting frequency increment failed.");
    }
-   else Serial.println("Setting frequency increment successful.");
-
-   pmodIA.getByte(0x8F, &val);
-   Serial.print("Register Value After incrementFreq:");
-   Serial.println(val);
-
 
    if(pmodIA.setNumberIncrements(numberIncrements) == false) {
       Serial.println("Setting number of increments failed.");
    }
-   else Serial.println("Setting number of increments successful.");
 
 
-   pmodIA.getByte(0x8F, &val);
-   Serial.print("Register Value After numberIncrements:");
-   Serial.println(val);
+   // Step 2
 
 
 
-   //Step 2: numberMeasurements written above
 
-   //Step 3:
-   int realArray [numberMeasurements] = { };
-   int imagArray [numberMeasurements] = { };
-
-   //Serial.println(realArray[4]);
-
-   //Step 4:
-
-   pmodIA.getByte(0x8F, &val);
-   Serial.print("Register Value Before Reset:");
-   Serial.println(val);
-   pmodIA.reset();
+   // int magn;
+   // for(unsigned int i=0; i<numberIncrements; i++) {
+   // Serial.print(realArray[i]);
+   // Serial.print("  ");
+   // Serial.print(imagArray[i]);
+   // Serial.print("   ");
+   // magn = sqrt(pow(realArray[i],2) + pow(imagArray[i],2));
+   // Serial.println(magn);
+   // }
 
 
-
-  
-   pmodIA.getByte(0x8F, &val);
-   Serial.print("Register Value Before FreqSweep:");
-   Serial.println(val);
-
-   Serial.println("Entering frequencySweep");
+while(1){ //Need this to stop from exiting main at end of code. Otherwise the world explodes
    if(!(pmodIA.frequencySweep(realArray, imagArray, numberMeasurements))) {
       Serial.println("Frequency sweep failed.");
    }
-   else Serial.println("Successful frequency sweep");
-   //Serial.println(realArray[4]);
-   pmodIA.getByte(0x8F, &val);
-   Serial.print("Register Value After freqSweep:");
-   Serial.println(val);
-   pmodIA.reset();
-   pmodIA.getByte(0x8F, &val);
-   Serial.print("Register Value After Reset & freqSqeep:");
-   Serial.println(val);
+}
 
-while(1);
+
    // Serial.println("Got to here 2");
    // //set start frequency
    // pmodIA.setStartFrequency(startFrequency);
