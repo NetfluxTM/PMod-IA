@@ -37,17 +37,28 @@ const int address = 0x0D; // can also use "AD5933_ADDR" defined in AD5933.h
 
 
 int main(){
+   byte val = 0; // for testing reg values
+
+
+
+   
    unsigned long  startFrequency     = 1000; // start frequency
    unsigned long  incrementFrequency = 100;  // frequency increment
    unsigned int   numberIncrements   = 10;   // number of increments (points in the sweep)
-   int   numberMeasurements = 5;   // number of discrete measurements to be taken
+   int   numberMeasurements = 10;   // number of discrete measurements to be taken
    
    // Startup Initialization Procedures
    sei(); //enable global interrupts... 
    Serial.begin(9600);
    Serial.println("\nGot to here 1");
+   
+
    AD5933 pmodIA;
    Wire.begin(); // join i2c bus (address optional for master)
+
+   pmodIA.getByte(0x8F, &val);
+   Serial.print("Register Value At Very Start:");
+   Serial.println(val);
 
 /* Frequency Sweep Sequence:
  * 1) Program Frequency Sweep Parameters into relevant registers
@@ -72,15 +83,33 @@ int main(){
    }
    else Serial.println("Setting start frequency successful.");
 
+   pmodIA.getByte(0x8F, &val);
+   Serial.print("Register Value After startFreq:");
+   Serial.println(val);
+
+
+
    if(pmodIA.setIncrementFrequency(incrementFrequency) == false) {
       Serial.println("Setting frequency increment failed.");
    }
    else Serial.println("Setting frequency increment successful.");
 
+   pmodIA.getByte(0x8F, &val);
+   Serial.print("Register Value After incrementFreq:");
+   Serial.println(val);
+
+
    if(pmodIA.setNumberIncrements(numberIncrements) == false) {
       Serial.println("Setting number of increments failed.");
    }
    else Serial.println("Setting number of increments successful.");
+
+
+   pmodIA.getByte(0x8F, &val);
+   Serial.print("Register Value After numberIncrements:");
+   Serial.println(val);
+
+
 
    //Step 2: numberMeasurements written above
 
@@ -88,16 +117,35 @@ int main(){
    int realArray [numberMeasurements] = { };
    int imagArray [numberMeasurements] = { };
 
-   Serial.println(realArray[4]);
+   //Serial.println(realArray[4]);
 
    //Step 4:
+
+   pmodIA.getByte(0x8F, &val);
+   Serial.print("Register Value Before Reset:");
+   Serial.println(val);
+   pmodIA.reset();
+
+
+
+  
+   pmodIA.getByte(0x8F, &val);
+   Serial.print("Register Value Before FreqSweep:");
+   Serial.println(val);
+
+   Serial.println("Entering frequencySweep");
    if(!(pmodIA.frequencySweep(realArray, imagArray, numberMeasurements))) {
-      Serial.println("FLrequency sweep failed.");
-      //return 0;
+      Serial.println("Frequency sweep failed.");
    }
-   else Serial.println("SUccessful frequency sweep");
-   Serial.println("She sells seashells");
-   Serial.println(realArray[4]);
+   else Serial.println("Successful frequency sweep");
+   //Serial.println(realArray[4]);
+   pmodIA.getByte(0x8F, &val);
+   Serial.print("Register Value After freqSweep:");
+   Serial.println(val);
+   pmodIA.reset();
+   pmodIA.getByte(0x8F, &val);
+   Serial.print("Register Value After Reset & freqSqeep:");
+   Serial.println(val);
 
 while(1);
    // Serial.println("Got to here 2");

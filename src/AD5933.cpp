@@ -425,6 +425,7 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
          setControlMode(CTRL_INIT_START_FREQ) && // init start freq
          setControlMode(CTRL_START_FREQ_SWEEP))) // begin frequency sweep
          {
+             Serial.println("Settings Modes");
              return false;
          }
 
@@ -432,15 +433,31 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
     int i = 0;
     while ((readStatusRegister() & STATUS_SWEEP_DONE) != STATUS_SWEEP_DONE) {
         // Make sure we aren't exceeding the bounds of our buffer
+           byte val;
+           getByte(0x94, &val);
+           Serial.print("Reg 0x94 real 1: ");
+           Serial.println(val);
+           getByte(0x95, &val);
+           Serial.print("Reg 0x95 real 2: ");
+           Serial.println(val);
+
+            getByte(0x8F, &val);
+            Serial.print("Register Value After Reset:");
+            Serial.println(val);
         if (i >= n) {
+            Serial.println(readStatusRegister());
+            Serial.println(i);
+            Serial.println(n);
+            Serial.println("Performing Sweep");
             return false;
         }
 
         // Get the data for this frequency point and store it in the array
         if (!getComplexData(&real[i], &imag[i])) {
+            Serial.println("getComplexData1");
             return false;
         }
-
+        Serial.println(i);
         // Increment the frequency and our index.
         i++;
         setControlMode(CTRL_INCREMENT_FREQ);
