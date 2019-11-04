@@ -19,7 +19,7 @@
  *        where the error code will be stored if fail.
  * @return Success or failure
  */
-int AD5933::getByte(byte address, byte *value) {
+bool AD5933::getByte(byte address, byte *value) { // changed from static int to static bool
     // Request to read a byte using the address pointer register
     Wire.beginTransmission(AD5933_ADDR);
     Wire.write(ADDR_PTR);
@@ -424,7 +424,7 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
          setControlMode(CTRL_INIT_START_FREQ) && // init start freq
          setControlMode(CTRL_START_FREQ_SWEEP))) // begin frequency sweep
          {
-             Serial.println("Settings Modes Failed");
+             Serial.println("Setting Modes Failed");
              return false;
          }
 
@@ -433,13 +433,13 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
     while ((readStatusRegister() & STATUS_SWEEP_DONE) != STATUS_SWEEP_DONE) {
         // Make sure we aren't exceeding the bounds of our buffer
         if (i >= n) { //10/30/2019 Changed "i >= n" to "i > n". This fixed a bug with the STATUS_SWEEP_DONE flag never setting.
-            Serial.println("i is bigger than or equal to n");
+            Serial.println("Exceeded the bounds of the buffer");
             return false;
         }
 
         // Get the data for this frequency point and store it in the array
         if (!getComplexData(&real[i], &imag[i])) {
-            Serial.println("getComplexData Failed");
+            Serial.println("Unable to retrieve data");
             return false;
         }
         Serial.print(real[i]);
@@ -460,12 +460,12 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
  * Computes the gain factor and phase for each point in a frequency sweep.
  *
  * @param gain An array of appropriate size to hold the gain factors
- * @param phase An array of appropriate size to hold phase data.
+ * @param phase An array of appropriate size to hold the phase data.
  * @param ref The known reference resistance.
  * @param n Length of the array (or the number of discrete measurements)
  * @return Success or failure
  */
-bool AD5933::calibrate(double gain[], int phase[], int ref, int n) {
+bool AD5933::calibrate(double gain[], int phase[], double ref, int n) { //11/1/2019 changed int ref to double ref to accomodate specific resistances (250.1 ohms)
     // We need arrays to hold the real and imaginary values temporarily
     int *real = new int[n];
     int *imag = new int[n];
@@ -481,6 +481,8 @@ bool AD5933::calibrate(double gain[], int phase[], int ref, int n) {
     for (int i = 0; i < n; i++) {
         gain[i] = (double)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));
         // TODO: phase
+        // Phase(rads) = arctan(I / R)
+        // for each measurement point 
     }
 
     delete [] real;
@@ -500,8 +502,8 @@ bool AD5933::calibrate(double gain[], int phase[], int ref, int n) {
  * @param n Length of the array (or the number of discrete measurements)
  * @return Success or failure
  */
-bool AD5933::calibrate(double gain[], int phase[], int real[], int imag[],
-                       int ref, int n) {
+bool AD5933::calibrate(double gain[], int phase[], int real[], int imag[], // 11/1/2019 changed int ref to double ref to accomodate specific resistances (250.1 ohms)
+                       double ref, int n) {
     // Perform the frequency sweep
     if (!frequencySweep(real, imag, n)) {
         return false;
@@ -511,6 +513,8 @@ bool AD5933::calibrate(double gain[], int phase[], int real[], int imag[],
     for (int i = 0; i < n; i++) {
         gain[i] = (double)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));
         // TODO: phase
+        // Phase(rads) = arctan(I / R)
+        // for each measurement point 
     }
 
     return true;

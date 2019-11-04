@@ -99,7 +99,7 @@
 class AD5933 {
     public:
         // Sending/Receiving byte method, for easy re-use
-        static int getByte(byte, byte*);
+        static bool getByte(byte, byte*); // changed from static int to static bool
         static bool sendByte(byte, byte);
     
         // Reset the board
@@ -141,9 +141,9 @@ class AD5933 {
 
         // Perform frequency sweeps
         static bool frequencySweep(int real[], int imag[], int);
-        static bool calibrate(double gain[], int phase[], int ref, int n);
+        static bool calibrate(double gain[], int phase[], double ref, int n);
         static bool calibrate(double gain[], int phase[], int real[],
-                              int imag[], int ref, int n);
+                              int imag[], double ref, int n);
     private:
         // Private data
         static const unsigned long int clockSpeed = 16776000;

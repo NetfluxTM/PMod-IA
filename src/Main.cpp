@@ -1,145 +1,83 @@
-/*
- * Description:
- *    Reads/Writes data to PmodIA via I2C.
- *    Sends commands to slave to initiate impedance analysis
- *    Reads impedance data back to arduino board (master).
+/* @file Main.cpp
+ *
+ * @brief Reads impedance values from the AD5933
  * 
- * Questions / Look into:
- *    Step 1 could be condensed. if desired.
- *    getByte returns an int, but inside the code actually returns true and false.
- *       Should we change it to a bool?
- *    Do we need to set clock source or set internal clock?
- *       A: default clock option on power-up is internal clock
+ * ! The gain settings need to be chosen to place the excitation signal in the linear region of the on-board ADC.!
+ * Must recalculate gain if any of these parameters change:
+ *    Current-to-voltage gain setting resistor
+ *    Output excitation voltage
+ *    PGA gain
  * 
- * Most Recent Changes:
- *    added numberMeasurements
- *    changed initial variables into unsigned
- *    added comments for freq. sweep sequence
- *    added register setting
- *    added arrays for holding data
- *    added frequencySweep call
+ * To save memory and allow for data to be processed in real time, remove abstraction 
+ * example) https://github.com/mjmeli/arduino-ad5933/blob/master/examples/ad5933-test/ad5933-test.ino
  * 
- * To Do: 
- *    Frequency Sweep goes back and forth between working and failing.
- *       PLUS, weird bug where it only prints the first two characters starts happening
- *       again as soon as it's past the function call.
- *    Verify data being returned is good & complete. start printing to a file instead of monitor?
- *    Use setOutputRange to...set output range
- *       
+ * 
+ * Impedance is (gain * magnitude)^-1
+ * Phase is unknown_phase - system_phase
+ * 
+ * 
  */
-
 #include <avr/io.h>
 #include <Arduino.h>
 #include <Wire.h>
 #include "AD5933.h"
 
-const int address = 0x0D; // can also use "AD5933_ADDR" defined in AD5933.h
-
+#define REF_RESIST (250.1) // The known reference resistor for calibration
 
 int main(){
-   unsigned long  startFrequency     = 15000; // start frequency
-   unsigned long  incrementFrequency = 1;  // frequency increment
-   unsigned int   numberIncrements   = 100;   // number of increments (points in the sweep)
-   int   numberMeasurements = numberIncrements+1;   // number of discrete measurements to be taken
-   
-   int realArray [numberMeasurements] = { };
-   int imagArray [numberMeasurements] = { };
+   unsigned long  startFrequency     = 15000;   // start frequency
+   unsigned long  incrementFrequency = 1;       // frequency increment
+   unsigned int   numberIncrements   = 100;     // number of increments (points in the sweep)
+   int real [numberIncrements+1] = { };         // array to hold the real data
+   int imag [numberIncrements+1] = { };         // array to hold the imaginary data
+   double gain[numberIncrements+1] = { };       // array to hold the gain factors
+   int phase[numberIncrements+1] = { };         // array to hold the system phase data
 
-
-   // Startup Initialization Procedures
-   sei(); //enable global interrupts... 
+   // Initializations
+   sei(); // enable global interrupts... 
    Serial.begin(9600);
    AD5933 pmodIA;
    Wire.begin(); // join i2c bus (address optional for master)
 
-/* Frequency Sweep Sequence:
- * 1) Program Frequency Sweep Parameters into relevant registers
- *    a) Start Frequency
- *    b) # of increments
- *    c) frequency increment
- * 
- * 2) AD5933::frequencySweep
- *    a) This function will:
- *          Enter standby mode
- *          Enter initialize mode
- *          Enter freq sweep mode
- *    b) Will also perform the sweep for us
- */
-   //Step 1
-   if(pmodIA.setStartFrequency(startFrequency) == false) {
+   // Setting Frequency Sweep Registers
+   if(!(pmodIA.setStartFrequency(startFrequency))) {
       Serial.println("Setting start frequency failed.");
    }
-
-   if(pmodIA.setIncrementFrequency(incrementFrequency) == false) {
+   if(!(pmodIA.setIncrementFrequency(incrementFrequency))) {
       Serial.println("Setting frequency increment failed.");
    }
-
-   if(pmodIA.setNumberIncrements(numberIncrements) == false) {
+   if(!(pmodIA.setNumberIncrements(numberIncrements))) {
       Serial.println("Setting number of increments failed.");
    }
 
-
-   // Step 2
-
-
-
-
-   // int magn;
-   // for(unsigned int i=0; i<numberIncrements; i++) {
-   // Serial.print(realArray[i]);
-   // Serial.print("  ");
-   // Serial.print(imagArray[i]);
-   // Serial.print("   ");
-   // magn = sqrt(pow(realArray[i],2) + pow(imagArray[i],2));
-   // Serial.println(magn);
-   // }
+   // Perform calibration sweep across a known resistor
+   if(!(pmodIA.calibrate(gain, phase, REF_RESIST, numberIncrements+1))){
+      Serial.println("Calibration failed.");
+   } // Do Not Modify Past This Point: PGA gain, output excitation voltage, or current-to-voltage gain setting resistor.
 
 
-while(1){ //Need this to stop from exiting main at end of code. Otherwise the world explodes
-   if(!(pmodIA.frequencySweep(realArray, imagArray, numberMeasurements))) {
-      Serial.println("Frequency sweep failed.");
+   while(1){ //Need this to stop from exiting main at end of code. Otherwise the world explodes
+      if(!(pmodIA.frequencySweep(real, imag, numberIncrements+1))) {
+       Serial.println("Frequency sweep failed.");
+      }
    }
-}
 
+/*
+   int magnitude;
+   for(unsigned int i=0; i<numberIncrements; i++) {
+   Serial.print(realArray[i]);
+   Serial.print("  ");
+   Serial.print(imagArray[i]);
+   Serial.print("   ");
+   magnitude = sqrt(pow(realArray[i],2) + pow(imagArray[i],2));
+   Serial.println(magnitude);
+   } */
 
-   // Serial.println("Got to here 2");
-   // //set start frequency
-   // pmodIA.setStartFrequency(startFrequency);
-   // Serial.println("Got to here 3");
-   // //number of increments
-   // pmodIA.setIncrementFrequency(incrementFrequency);
-   // Serial.println("Got to here 4");
-   // //frequency increment
-   // pmodIA.setNumberIncrements(numberIncrements);
-   // Serial.println("Got to here 5");
-   // while(1) {
-   //    Serial.println("Got to here 6");
-   //    Serial.print("Start frequency set");
-   //    Serial.print("Set Value: "); 
-   //    Serial.println(startFrequency);
-
-   //    long frequencySet1=pmodIA.readRegister(START_FREQ_1);
-
-   //    long frequencySet2=pmodIA.readRegister(START_FREQ_2);
-   //    Serial.println("actuall read data");
-   //    Serial.println(frequencySet2);
-   //    long frequencySet3=pmodIA.readRegister(START_FREQ_3);
-   //    long frequency=(frequencySet1<<16)||(frequencySet2<<8)||(frequencySet3);
-   //    Serial.print("Actual Value: ");
-   //    Serial.println(frequency);
-   //    delay(1000);
-   // }
-
-
-      //******************************************************//
-      //******program parameters into relavant registers***********(we could have some sort of user input from the computer to do this...)
+/*
+      //******program parameters into relavant registers******
            //start frequency register
            //number of increments
            //frequency increment
-
-
-
-
 
       // Wire.beginTransmission(address); // transmit to device #8
       // Wire.write(0x80);        // sends five bytes
@@ -164,4 +102,5 @@ while(1){ //Need this to stop from exiting main at end of code. Otherwise the wo
       // Serial.println(c);
       
       // delay(5000);
+      */
 }
