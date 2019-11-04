@@ -144,6 +144,10 @@ class AD5933 {
         static bool calibrate(double gain[], int phase[], double ref, int n);
         static bool calibrate(double gain[], int phase[], int real[],
                               int imag[], double ref, int n);
+        //Calculating Impedance
+        static bool calculate(double magZ[], int phaseZ[], double gain[], int phase[], int real[], int imag[], int n);
+
+
     private:
         // Private data
         static const unsigned long int clockSpeed = 16776000;

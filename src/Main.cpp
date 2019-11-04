@@ -32,6 +32,8 @@ int main(){
    int imag [numberIncrements+1] = { };         // array to hold the imaginary data
    double gain[numberIncrements+1] = { };       // array to hold the gain factors
    int phase[numberIncrements+1] = { };         // array to hold the system phase data
+   double magZ[numberIncrements+1] = { };       // Calculated magnitude of the impedance
+   int phaseZ[numberIncrements+1] = { };     // Calculated phase of the impedance
 
    // Initializations
    sei(); // enable global interrupts... 
@@ -60,6 +62,7 @@ int main(){
       if(!(pmodIA.frequencySweep(real, imag, numberIncrements+1))) {
        Serial.println("Frequency sweep failed.");
       }
+      pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numberIncrements+1);
    }
 
 /*

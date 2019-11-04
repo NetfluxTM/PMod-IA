@@ -442,11 +442,7 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
             Serial.println("Unable to retrieve data");
             return false;
         }
-        Serial.print(real[i]);
-        Serial.print("  ");
-        Serial.print(imag[i]);
-        Serial.print("   ");
-        Serial.println(1 / ((1.94123* pow(10,-7)) * sqrt(pow(real[i],2) + pow(imag[i],2))));
+
         // Increment the frequency and our index.
         i++;
         setControlMode(CTRL_INCREMENT_FREQ);
@@ -528,6 +524,7 @@ bool AD5933::calibrate(double gain[], int phase[], int real[], int imag[], // 11
     // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
         gain[i] = (double)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));
+
         // TODO: phase
         // Phase(rads) = arctan(I / R)
         // for each measurement point 
@@ -543,6 +540,40 @@ bool AD5933::calibrate(double gain[], int phase[], int real[], int imag[], // 11
         else {
             return false;
         }
+    }
+
+    return true;
+}
+
+bool AD5933::calculate(double magZ[], int phaseZ[], double gain[], int phase[], int real[], int imag[], int n) {
+    // magZ = 1 / (gain * magn)
+    // magn = sqrt(R^2 + I^2)
+
+    //phaseZ = (phase from freqsweep) - (phase[i])
+    for (int i = 0; i < n; i++) { // First Quadrant
+        magZ[i] = (double)(1.0 / (gain[i] * sqrt(pow(real[i], 2) + pow(imag[i], 2))));
+
+        if((real[i] > 0) & (imag[i] > 0)) {
+            phaseZ[i] = ((atan(imag[i] / real[i]) * (180.0 / PI)) - phase[i]);
+        }
+        else if(real[i] < 0) { // Second or Third Quadrant
+            phaseZ[i] = ((180 + (atan(imag[i] / real[i]) * (180.0 / PI))) - phase[i]);
+        }
+        else if((real[i] > 0) & (imag[i] < 0)) {
+            phaseZ[i] = ((360 + (atan(imag[i] / real[i]) * (180.0 / PI))) - phase[i]);
+        }
+        else {
+            return false;
+        }
+        // Serial prints to temporarily test functionality
+        Serial.print(real[i]);
+        Serial.print("  ");
+        Serial.print(imag[i]);
+        Serial.print("  ");
+        Serial.print(magZ[i]);
+        Serial.print("  ");
+        Serial.print(phaseZ[i]);
+        Serial.print("  ");
     }
 
     return true;
