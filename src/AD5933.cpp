@@ -480,9 +480,25 @@ bool AD5933::calibrate(double gain[], int phase[], double ref, int n) { //11/1/2
     // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
         gain[i] = (double)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));
+
         // TODO: phase
         // Phase(rads) = arctan(I / R)
         // for each measurement point 
+        // Check which quadrant real and imag are in, rotate accordingly
+        if((real[i] > 0) & (imag[i] > 0)) { // First Quadrant
+            phase[i] = (atan(imag[i] / real[i]) * (180.0 / PI));
+        }
+        else if(real[i] < 0) { // Second or Third Quadrant same calculation
+            phase[i] = (180 + (atan(imag[i] / real[i]) * (180.0 / PI)));
+        }
+        else if((real[i] > 0) & (imag[i] < 0)) { // Fourth Quadrant
+            phase[i] = (360 + (atan(imag[i] / real[i]) * (180.0 / PI)));
+        }
+        else {
+            delete [] real;
+            delete [] imag;
+            return false;
+        }
     }
 
     delete [] real;
@@ -515,6 +531,18 @@ bool AD5933::calibrate(double gain[], int phase[], int real[], int imag[], // 11
         // TODO: phase
         // Phase(rads) = arctan(I / R)
         // for each measurement point 
+        if((real[i] > 0) & (imag[i] > 0)) { // First Quadrant
+            phase[i] = (atan(imag[i] / real[i]) * (180.0 / PI));
+        }
+        else if(real[i] < 0) { // Second or Third Quadrant same calculation
+            phase[i] = (180 + (atan(imag[i] / real[i]) * (180.0 / PI)));
+        }
+        else if((real[i] > 0) & (imag[i] < 0)) { // Fourth Quadrant
+            phase[i] = (360 + (atan(imag[i] / real[i]) * (180.0 / PI)));
+        }
+        else {
+            return false;
+        }
     }
 
     return true;
