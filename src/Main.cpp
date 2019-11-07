@@ -25,6 +25,7 @@
 #define REF_RESIST (250.1) // The known reference resistor for calibration
 
 int main(){
+
    unsigned long  startFrequency     = 15000;   // start frequency
    unsigned long  incrementFrequency = 1;       // frequency increment
    unsigned int   numberIncrements   = 100;     // number of increments (points in the sweep)
@@ -41,6 +42,8 @@ int main(){
    AD5933 pmodIA;
    Wire.begin(); // join i2c bus (address optional for master)
 
+   Serial.println("Starting");
+
    // Setting Frequency Sweep Registers
    if(!(pmodIA.setStartFrequency(startFrequency))) {
       Serial.println("Setting start frequency failed.");
@@ -52,17 +55,27 @@ int main(){
       Serial.println("Setting number of increments failed.");
    }
 
+   Serial.println("Finished Starting Process");
+
+
+   // Setting output range
+   pmodIA.setOutputRange(CTRL_OUTPUT_RANGE4);
+
    // Perform calibration sweep across a known resistor
    if(!(pmodIA.calibrate(gain, phase, REF_RESIST, numberIncrements+1))){
       Serial.println("Calibration failed.");
    } // Do Not Modify Past This Point: PGA gain, output excitation voltage, or current-to-voltage gain setting resistor.
-
-
-   while(1){ //Need this to stop from exiting main at end of code. Otherwise the world explodes
-      if(!(pmodIA.frequencySweep(real, imag, numberIncrements+1))) {
-       Serial.println("Frequency sweep failed.");
+   
+   
+   if(!(pmodIA.frequencySweep(real, imag, numberIncrements+1))) {
+      Serial.println("Frequency sweep failed.");
       }
       pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numberIncrements+1);
+
+
+// Repeatedly call a frequency sweep & calculate the Impedance
+   while(1){
+      Serial.println("Got to While Loop!");
    }
 
 /*
