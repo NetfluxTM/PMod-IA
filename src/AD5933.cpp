@@ -476,7 +476,7 @@ bool AD5933::calibrate(double gain[], int phase[], double ref, int n) { //11/1/2
         delete [] imag;
         return false;
     }
-
+    Serial.println("Calibrate Code");
     // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
         gain[i] = (double)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));

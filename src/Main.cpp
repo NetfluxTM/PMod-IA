@@ -29,12 +29,13 @@ int main(){
    unsigned long  startFrequency     = 15000;   // start frequency
    unsigned long  incrementFrequency = 1;       // frequency increment
    unsigned int   numberIncrements   = 100;     // number of increments (points in the sweep)
-   int real [numberIncrements+1] = { };         // array to hold the real data
-   int imag [numberIncrements+1] = { };         // array to hold the imaginary data
-   double gain[numberIncrements+1] = { };       // array to hold the gain factors
-   int phase[numberIncrements+1] = { };         // array to hold the system phase data
-   double magZ[numberIncrements+1] = { };       // Calculated magnitude of the impedance
-   int phaseZ[numberIncrements+1] = { };     // Calculated phase of the impedance
+   unsigned int   numMeasurements=numberIncrements+1;
+   int real [numMeasurements] = { };         // array to hold the real data
+   int imag [numMeasurements] = { };         // array to hold the imaginary data
+   int phase [numMeasurements] = { };         // array to hold the system phase data
+   int phaseZ [numMeasurements] = { };     // Calculated phase of the impedance
+   // double gain [numMeasurements] = { };       // array to hold the gain factors
+   // double magZ [numMeasurements] = { };       // Calculated magnitude of the impedance
 
    // Initializations
    sei(); // enable global interrupts... 
@@ -43,6 +44,14 @@ int main(){
    Wire.begin(); // join i2c bus (address optional for master)
 
    Serial.println("Starting");
+
+   //TestCode Remove down
+ 
+
+   //TestCode Remove ^^^^^
+
+
+
 
    // Setting Frequency Sweep Registers
    if(!(pmodIA.setStartFrequency(startFrequency))) {
@@ -56,26 +65,26 @@ int main(){
    }
 
    Serial.println("Finished Starting Process");
-
+  
 
    // Setting output range
    pmodIA.setOutputRange(CTRL_OUTPUT_RANGE4);
 
-   // Perform calibration sweep across a known resistor
-   if(!(pmodIA.calibrate(gain, phase, REF_RESIST, numberIncrements+1))){
-      Serial.println("Calibration failed.");
-   } // Do Not Modify Past This Point: PGA gain, output excitation voltage, or current-to-voltage gain setting resistor.
+   //Perform calibration sweep across a known resistor
+   // if(!(pmodIA.calibrate(gain, phase, REF_RESIST, numMeasurements))){
+   //    Serial.println("Calibration failed.");
+   // } // Do Not Modify Past This Point: PGA gain, output excitation voltage, or current-to-voltage gain setting resistor.
+   Serial.println("Finished Starting Process");
    
-   
-   if(!(pmodIA.frequencySweep(real, imag, numberIncrements+1))) {
+   if(!(pmodIA.frequencySweep(real, imag, numMeasurements))) {
       Serial.println("Frequency sweep failed.");
       }
-      pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numberIncrements+1);
+      //pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numMeasurements);
 
 
 // Repeatedly call a frequency sweep & calculate the Impedance
    while(1){
-      Serial.println("Got to While Loop!");
+      //Serial.println("Got to While Loop!");
    }
 
 /*
