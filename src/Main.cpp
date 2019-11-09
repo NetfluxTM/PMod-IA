@@ -22,27 +22,35 @@
 #include <Wire.h>
 #include "AD5933.h"
 
-#define REF_RESIST (250.1) // The known reference resistor for calibration
+#define REF_RESIST (500.1) // The known reference resistor for calibration
 
 int main(){
+   // unsigned long  startFrequency     = 15000; // start frequency
+   // unsigned long  incrementFrequency = 1;  // frequency increment
+   // unsigned int   numberIncrements   = 2;   // number of increments (points in the sweep)
+   // int   numberMeasurements = numberIncrements+1;   // number of discrete measurements to be taken
+   // int real [numberMeasurements] = { };
+   // int imag [numberMeasurements] = { };
+
 
    unsigned long  startFrequency     = 15000;   // start frequency
    unsigned long  incrementFrequency = 1;       // frequency increment
-   unsigned int   numberIncrements   = 100;     // number of increments (points in the sweep)
-   unsigned int   numMeasurements=numberIncrements+1;
-   int real [numMeasurements] = { };         // array to hold the real data
-   int imag [numMeasurements] = { };         // array to hold the imaginary data
-   int phase [numMeasurements] = { };         // array to hold the system phase data
-   int phaseZ [numMeasurements] = { };     // Calculated phase of the impedance
-   // double gain [numMeasurements] = { };       // array to hold the gain factors
-   // double magZ [numMeasurements] = { };       // Calculated magnitude of the impedance
+   unsigned int   numberIncrements   = 10;     // number of increments (points in the sweep)
+   unsigned int   numberMeasurements=numberIncrements+1;
+   int real [numberMeasurements] = { };         // array to hold the real data
+   int imag [numberMeasurements] = { };         // array to hold the imaginary data
+   int phase [numberMeasurements];         // array to hold the system phase data
+   int phaseZ [numberMeasurements];     // Calculated phase of the impedance
+   double gain [numberMeasurements];       // array to hold the gain factors
+   double magZ [numberMeasurements];       // Calculated magnitude of the impedance
 
    // Initializations
    sei(); // enable global interrupts... 
    Serial.begin(9600);
    AD5933 pmodIA;
    Wire.begin(); // join i2c bus (address optional for master)
-
+   //delay(3000);
+  
    Serial.println("Starting");
 
    //TestCode Remove down
@@ -63,29 +71,57 @@ int main(){
    if(!(pmodIA.setNumberIncrements(numberIncrements))) {
       Serial.println("Setting number of increments failed.");
    }
-
-   Serial.println("Finished Starting Process");
+   if(pmodIA.setPGAGain(CTRL_PGA_GAIN_X5)==false){
+      Serial.println("Setting PGA Gain Failed.");
+   }
+   if(!(pmodIA.setOutputRange(CTRL_OUTPUT_RANGE4))){
+     Serial.println("Setting output Range Failed");
+  }
   
 
-   // Setting output range
-   pmodIA.setOutputRange(CTRL_OUTPUT_RANGE4);
 
-   //Perform calibration sweep across a known resistor
-   // if(!(pmodIA.calibrate(gain, phase, REF_RESIST, numMeasurements))){
-   //    Serial.println("Calibration failed.");
-   // } // Do Not Modify Past This Point: PGA gain, output excitation voltage, or current-to-voltage gain setting resistor.
-   Serial.println("Finished Starting Process");
-   
-   if(!(pmodIA.frequencySweep(real, imag, numMeasurements))) {
+   if(!(pmodIA.calibrate(gain, phase, real, imag, REF_RESIST, numberMeasurements))){
+      Serial.println("Calibration failed.");
+   } // Do Not Modify Past This Point: PGA gain, output excitation voltage, or current-to-voltage gain setting resistor.
+   //Serial.println(gain[1]);
+ 
+ 
+ //Headings
+        Serial.print("Real");
+        Serial.print("    ");
+        Serial.print("Imaginary");
+        Serial.print("    ");
+        Serial.print("Impedance");
+        Serial.print("    ");
+        Serial.print("Phase");
+        Serial.println("    "); 
+
+   while(1){
+      Serial.println("Loop Iteration");
+   if(!(pmodIA.frequencySweep(real, imag, numberMeasurements))) {
       Serial.println("Frequency sweep failed.");
       }
-      //pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numMeasurements);
-
-
-// Repeatedly call a frequency sweep & calculate the Impedance
-   while(1){
-      //Serial.println("Got to While Loop!");
+      pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numberMeasurements);
+      double sum=0;
+      for(int i =0;i<=numberMeasurements;i++){
+         
+         sum+=magZ[i];
+      }
+      Serial.println(sum/numberMeasurements-REF_RESIST);
    }
+      //pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numberMeasurements);
+
+
+
+   // int magn;
+   // for(unsigned int i=0; i<numberIncrements; i++) {
+   // Serial.print(realArray[i]);
+   // Serial.print("  ");
+   // Serial.print(imagArray[i]);
+   // Serial.print("   ");
+   // magn = sqrt(pow(realArray[i],2) + pow(imagArray[i],2));
+   // Serial.println(magn);
+   // }
 
 /*
    int magnitude;

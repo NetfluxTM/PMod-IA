@@ -434,19 +434,32 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
 
     // Perform the sweep. Make sure we don't exceed n.
     int i = 0;
+    float magnitude=0;
+    float phase=0;
+    float gainFactor=9.987*pow(10,-7);
     while ((readStatusRegister() & STATUS_SWEEP_DONE) != STATUS_SWEEP_DONE) {
         // Make sure we aren't exceeding the bounds of our buffer
         if (i >= n) { //10/30/2019 Changed "i >= n" to "i > n". This fixed a bug with the STATUS_SWEEP_DONE flag never setting.
             Serial.println("Exceeded the bounds of the buffer");
             return false;
         }
-
+    
         // Get the data for this frequency point and store it in the array
         if (!getComplexData(&real[i], &imag[i])) {
             Serial.println("Unable to retrieve data");
             return false;
         }
-
+        // phase=tan(imag[i]/real[i]);
+        // magnitude=sqrt(pow(real[i],2) + pow(imag[i],2));
+        // Serial.print(real[i]);
+        // Serial.print("\t\t");
+        // Serial.print(imag[i]);
+        // Serial.print("\t\t");
+        // Serial.print(magnitude);
+        // Serial.print("\t\t");
+        // Serial.print(1 / (gainFactor*magnitude));//-250.1);//impedance measurement //(1.94123* pow(10,-7))
+        // Serial.print("\t\t");
+        // Serial.println(phase);
         // Increment the frequency and our index.
         i++;
         setControlMode(CTRL_INCREMENT_FREQ);
@@ -469,14 +482,15 @@ bool AD5933::calibrate(double gain[], int phase[], double ref, int n) { //11/1/2
     // We need arrays to hold the real and imaginary values temporarily
     int *real = new int[n];
     int *imag = new int[n];
-
+    Serial.println("Calibrate Code1");
     // Perform the frequency sweep
     if (!frequencySweep(real, imag, n)) {
+        Serial.println("Calibrate CodeFailed");
         delete [] real;
         delete [] imag;
         return false;
     }
-    Serial.println("Calibrate Code");
+    Serial.println("Calibrate Code2");
     // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
         gain[i] = (double)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));
@@ -486,13 +500,13 @@ bool AD5933::calibrate(double gain[], int phase[], double ref, int n) { //11/1/2
         // for each measurement point 
         // Check which quadrant real and imag are in, rotate accordingly
         if((real[i] > 0) & (imag[i] > 0)) { // First Quadrant
-            phase[i] = (atan(imag[i] / real[i]) * (180.0 / PI));
+            //phase[i] = (atan(imag[i] / real[i]) * (180.0 / PI));
         }
         else if(real[i] < 0) { // Second or Third Quadrant same calculation
-            phase[i] = (180 + (atan(imag[i] / real[i]) * (180.0 / PI)));
+            //phase[i] = (180 + (atan(imag[i] / real[i]) * (180.0 / PI)));
         }
         else if((real[i] > 0) & (imag[i] < 0)) { // Fourth Quadrant
-            phase[i] = (360 + (atan(imag[i] / real[i]) * (180.0 / PI)));
+           // phase[i] = (360 + (atan(imag[i] / real[i]) * (180.0 / PI)));
         }
         else {
             delete [] real;
@@ -527,25 +541,38 @@ bool AD5933::calibrate(double gain[], int phase[], int real[], int imag[], // 11
 
     // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
-        gain[i] = (double)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));
 
-        // TODO: phase
-        // Phase(rads) = arctan(I / R)
-        // for each measurement point 
-        if((real[i] > 0) & (imag[i] > 0)) { // First Quadrant
+        gain[i] = (double)(1.0/(ref*(double)sqrt(pow(real[i], 2) + pow(imag[i], 2))));
+        Serial.print("Gain:");
+        Serial.println(gain[i],11);
+        //TODO: phase
+       // Phase(rads) = arctan(I / R)
+       // for each measurement point 
+        //TO DO: Put in Phase measurments when convenient
+        if((real[i] > 0) && (imag[i] > 0)) { // First Quadrant
             phase[i] = (atan(imag[i] / real[i]) * (180.0 / PI));
         }
         else if(real[i] < 0) { // Second or Third Quadrant same calculation
-            phase[i] = (180 + (atan(imag[i] / real[i]) * (180.0 / PI)));
+            phase[i] = (180+ (atan(imag[i] / real[i]) * (180.0 / PI)));
         }
-        else if((real[i] > 0) & (imag[i] < 0)) { // Fourth Quadrant
+        else if((real[i] > 0) && (imag[i] < 0)) { // Fourth Quadrant
             phase[i] = (360 + (atan(imag[i] / real[i]) * (180.0 / PI)));
         }
-        else {
+        else if(real[i]==0){
+            phase[i]=90*imag[i]/abs(imag[i]);
+            
+        }
+        else if(imag[i]==0){
+            phase[i]=90-90*real[i]/abs(real[i]);
+           
+        }
+        else{
             return false;
         }
+
     }
 
+    Serial.println("Passed Calibration");
     return true;
 }
 
@@ -566,18 +593,28 @@ bool AD5933::calculate(double magZ[], int phaseZ[], double gain[], int phase[], 
         else if((real[i] > 0) & (imag[i] < 0)) {
             phaseZ[i] = ((360 + (atan(imag[i] / real[i]) * (180.0 / PI))) - phase[i]);
         }
+        else if(real[i]==0){
+            phase[i]=90*imag[i]/abs(imag[i]);
+            
+        }
+        else if(imag[i]==0){
+            phase[i]=90-90*real[i]/abs(real[i]);
+           
+        }
         else {
             return false;
         }
         // Serial prints to temporarily test functionality
-        Serial.print(real[i]);
-        Serial.print("  ");
-        Serial.print(imag[i]);
-        Serial.print("  ");
-        Serial.print(magZ[i]);
-        Serial.print("  ");
-        Serial.print(phaseZ[i]);
-        Serial.print("  ");
+
+        // Serial.print(real[i]);
+        // Serial.print("\t");
+        // Serial.print(imag[i]);
+        // Serial.print("\t");
+        // Serial.print(magZ[i]);
+        // Serial.print("\t");
+        // Serial.print(phaseZ[i]);
+        // Serial.println("\t");
+        
     }
 
     return true;
