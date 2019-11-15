@@ -141,11 +141,11 @@ class AD5933 {
 
         // Perform frequency sweeps
         static bool frequencySweep(int real[], int imag[], int);
-        static bool calibrate(double gain[], int phase[], double ref, int n);
+        static bool calibrate(double gain[], int phase[], double, int);
         static bool calibrate(double gain[], int phase[], int real[],
-                              int imag[], double ref, int n);
+                              int imag[], double, int);
         //Calculating Impedance
-        static bool calculate(double magZ[], int phaseZ[], double gain[], int phase[], int real[], int imag[], int n);
+        static bool calculate(double magZ[], int phaseZ[], double gain[], int phase[], int real[], int imag[], int);
 
 
     private:

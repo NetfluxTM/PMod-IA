@@ -249,7 +249,7 @@ bool AD5933::setIncrementFrequency(unsigned long increment) {
  * @param start The number of increments to use. Max 511.
  * @return Success or failure
  */
-bool AD5933::setNumberIncrements(unsigned int num) {
+    bool AD5933::setNumberIncrements(unsigned int num) {
     // Check that the number sent in is valid.
     if (num > 511) {
         return false;
@@ -380,6 +380,7 @@ bool AD5933::getComplexData(int *real, int *imag) {
         getByte(IMAG_DATA_1, &imagComp[0]) &&
         getByte(IMAG_DATA_2, &imagComp[1]))
     {
+
         // Combine the two separate bytes into a single 16-bit value and store
         // them at the locations specified.
         *real = (int16_t)(((realComp[0] << 8) | realComp[1]) & 0xFFFF);
@@ -428,39 +429,25 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
          setControlMode(CTRL_INIT_START_FREQ) && // init start freq
          setControlMode(CTRL_START_FREQ_SWEEP))) // begin frequency sweep
          {
-             Serial.println("Setting Modes Failed");
+             Serial.println("SETTING MODES FAILED");
              return false;
          }
 
     // Perform the sweep. Make sure we don't exceed n.
     int i = 0;
-    float magnitude=0;
-    float phase=0;
-    float gainFactor=9.987*pow(10,-7);
     while ((readStatusRegister() & STATUS_SWEEP_DONE) != STATUS_SWEEP_DONE) {
         // Make sure we aren't exceeding the bounds of our buffer
         if (i >= n) { //10/30/2019 Changed "i >= n" to "i > n". This fixed a bug with the STATUS_SWEEP_DONE flag never setting.
-            Serial.println("Exceeded the bounds of the buffer");
+            Serial.println("EXCEEDED THE BOUNDS OF THE BUFFER");
             return false;
         }
     
         // Get the data for this frequency point and store it in the array
         if (!getComplexData(&real[i], &imag[i])) {
-            Serial.println("Unable to retrieve data");
+            Serial.println("UNABLE TO RETRIEVE DATA");
             return false;
         }
-        // phase=tan(imag[i]/real[i]);
-        // magnitude=sqrt(pow(real[i],2) + pow(imag[i],2));
-        // Serial.print(real[i]);
-        // Serial.print("\t\t");
-        // Serial.print(imag[i]);
-        // Serial.print("\t\t");
-        // Serial.print(magnitude);
-        // Serial.print("\t\t");
-        // Serial.print(1 / (gainFactor*magnitude));//-250.1);//impedance measurement //(1.94123* pow(10,-7))
-        // Serial.print("\t\t");
-        // Serial.println(phase);
-        // Increment the frequency and our index.
+        
         i++;
         setControlMode(CTRL_INCREMENT_FREQ);
     }
@@ -543,12 +530,8 @@ bool AD5933::calibrate(double gain[], int phase[], int real[], int imag[], // 11
     for (int i = 0; i < n; i++) {
 
         gain[i] = (double)(1.0/(ref*(double)sqrt(pow(real[i], 2) + pow(imag[i], 2))));
-        Serial.print("Gain:");
-        Serial.println(gain[i],11);
-        //TODO: phase
-       // Phase(rads) = arctan(I / R)
-       // for each measurement point 
-        //TO DO: Put in Phase measurments when convenient
+
+        
         if((real[i] > 0) && (imag[i] > 0)) { // First Quadrant
             phase[i] = (atan(imag[i] / real[i]) * (180.0 / PI));
         }

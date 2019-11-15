@@ -35,7 +35,7 @@ int main(){
 
    unsigned long  startFrequency     = 15000;   // start frequency
    unsigned long  incrementFrequency = 1;       // frequency increment
-   unsigned int   numberIncrements   = 10;     // number of increments (points in the sweep)
+   unsigned int   numberIncrements   = 20;     // number of increments (points in the sweep)
    unsigned int   numberMeasurements=numberIncrements+1;
    int real [numberMeasurements] = { };         // array to hold the real data
    int imag [numberMeasurements] = { };         // array to hold the imaginary data
@@ -43,22 +43,24 @@ int main(){
    int phaseZ [numberMeasurements];     // Calculated phase of the impedance
    double gain [numberMeasurements];       // array to hold the gain factors
    double magZ [numberMeasurements];       // Calculated magnitude of the impedance
+   
+
 
    // Initializations
-   sei(); // enable global interrupts... 
+   init(); // initializing things for arduino (ie delay, Serial communication, interrupts, etc.)
+   delay(4000);
    Serial.begin(9600);
    AD5933 pmodIA;
    Wire.begin(); // join i2c bus (address optional for master)
-   //delay(3000);
-  
+   
+
+   pmodIA.setControlMode(CTRL_RESET); 
    Serial.println("Starting");
 
    //TestCode Remove down
  
 
    //TestCode Remove ^^^^^
-
-
 
 
    // Setting Frequency Sweep Registers
@@ -96,72 +98,19 @@ int main(){
         Serial.print("Phase");
         Serial.println("    "); 
 
-   while(1){
-      Serial.println("Loop Iteration");
+   while(1)
+   {
+   Serial.print(millis()/1000.0);
+   Serial.print(", ");
    if(!(pmodIA.frequencySweep(real, imag, numberMeasurements))) {
       Serial.println("Frequency sweep failed.");
       }
       pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numberMeasurements);
       double sum=0;
-      for(int i =0;i<=numberMeasurements;i++){
+      for(int i = 0; i <= numberMeasurements; i++) {
          
-         sum+=magZ[i];
+         sum += magZ[i];
       }
-      Serial.println(sum/numberMeasurements-REF_RESIST);
+      Serial.println(sum / numberMeasurements - 250.1);
    }
-      //pmodIA.calculate(magZ, phaseZ, gain, phase, real, imag, numberMeasurements);
-
-
-
-   // int magn;
-   // for(unsigned int i=0; i<numberIncrements; i++) {
-   // Serial.print(realArray[i]);
-   // Serial.print("  ");
-   // Serial.print(imagArray[i]);
-   // Serial.print("   ");
-   // magn = sqrt(pow(realArray[i],2) + pow(imagArray[i],2));
-   // Serial.println(magn);
-   // }
-
-/*
-   int magnitude;
-   for(unsigned int i=0; i<numberIncrements; i++) {
-   Serial.print(realArray[i]);
-   Serial.print("  ");
-   Serial.print(imagArray[i]);
-   Serial.print("   ");
-   magnitude = sqrt(pow(realArray[i],2) + pow(imagArray[i],2));
-   Serial.println(magnitude);
-   } */
-
-/*
-      //******program parameters into relavant registers******
-           //start frequency register
-           //number of increments
-           //frequency increment
-
-      // Wire.beginTransmission(address); // transmit to device #8
-      // Wire.write(0x80);        // sends five bytes
-      // Wire.write(0xAA);              // sends one byte
-      // int num=Wire.endTransmission();    // stop 
-      
-      // Serial.println("Setting pointer");
-      // Wire.beginTransmission(address); // transmit to device #8
-      // Wire.write(0xB0);        // sends five bytes
-      // Wire.write(0x80);              // sends one byte
-      // num=Wire.endTransmission(); 
-
-      // Serial.print("end transmit code");
-      // Serial.println(num);
-      // Serial.println("Finished write, Begin read");
-      // Wire.requestFrom(0x0D, 1); // requst 6 bytes
-      // if(Wire.available()>=1){
-      //   Serial.println("contact made");
-      // }
-      // Serial.println("reading");
-      // int c= Wire.read();
-      // Serial.println(c);
-      
-      // delay(5000);
-      */
 }
